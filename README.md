@@ -2,10 +2,6 @@
 
 Forked from the sprint's base FastAPI template.
 
----
-
-## Diodon
-
 **What it does:** a dual-tab capture tool — Clipboard (yellow) and Tasksheet
 (blue). Paste/type into the shared capture box, select the part you want
 (or leave the whole box selected), and send it to either list with one
