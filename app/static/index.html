@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Diodon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F7F5;
+    --panel: #FFFFFF;
+    --border: #E5E7EB;
+    --text: #111827;
+    --muted: #6B7280;
+
+    --yellow: #EAB308;
+    --yellow-tint: #FEF9E7;
+    --yellow-tint-hover: #FDF2C4;
+
+    --blue: #2563EB;
+    --blue-tint: #EFF6FF;
+    --blue-tint-hover: #DBEAFE;
+
+    --accent: var(--yellow);
+    --accent-tint: var(--yellow-tint);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .app {
+    width: 100%;
+    max-width: 560px;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .brand h1 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .brand span {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 18px;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 7px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: background 0.15s ease, color 0.15s ease;
+    user-select: none;
+  }
+  .tab.active.clipboard { background: var(--yellow-tint); color: #92660A; }
+  .tab.active.tasksheet { background: var(--blue-tint); color: #1E40AF; }
+
+  .capture-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .capture-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  textarea#scratch {
+    width: 100%;
+    min-height: 90px;
+    resize: vertical;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    outline: none;
+  }
+  textarea#scratch:focus { border-color: var(--muted); }
+
+  .capture-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .capture-buttons button {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .capture-buttons button:hover { opacity: 0.85; }
+  .capture-buttons button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  .btn-yellow { background: var(--yellow); color: #4A3200; }
+  .btn-blue { background: var(--blue); color: #FFFFFF; }
+  .capture-hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .item.clipboard { border-left: 3px solid var(--yellow); }
+  .item.tasksheet { border-left: 3px solid var(--blue); }
+  .item.done { opacity: 0.5; }
+
+  .item-check {
+    margin-top: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid var(--muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+  .item-check.checked { background: var(--blue); border-color: var(--blue); color: white; }
+
+  .item-text {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .item.done .item-text { text-decoration: line-through; }
+
+  .item-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 5px;
+    line-height: 1;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .icon-btn:hover { background: var(--bg); color: var(--text); }
+  .icon-btn:focus-visible { outline: 2px solid var(--muted); outline-offset: 1px; }
+
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 40px 0;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--text);
+    color: white;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="brand">
+    <h1>Diodon</h1>
+    <span>clipboard + tasksheet</span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active clipboard" id="tabClipboard" data-tab="clipboard">Clipboard</div>
+    <div class="tab tasksheet" id="tabTasksheet" data-tab="tasksheet">Tasksheet</div>
+  </div>
+
+  <div class="capture-panel">
+    <div class="capture-label">Quick capture</div>
+    <textarea id="scratch" placeholder="Type or paste here. Select part of it (or leave nothing selected to grab it all), then send it to either list."></textarea>
+    <div class="capture-buttons">
+      <button class="btn-yellow" id="addToClipboard">+ Add to Clipboard</button>
+      <button class="btn-blue" id="addToTasksheet">+ Add to Tasksheet</button>
+    </div>
+    <div class="capture-hint">Tip: select text inside the box above before clicking — only the selection gets captured.</div>
+  </div>
+
+  <div class="list" id="list"></div>
+  <div class="empty-state" id="emptyState" style="display:none;"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const STORAGE_KEYS = { clipboard: 'diodon_clipboard', tasksheet: 'diodon_tasksheet' };
+  let activeTab = 'clipboard';
+
+  const scratch = document.getElementById('scratch');
+  const listEl = document.getElementById('list');
+  const emptyState = document.getElementById('emptyState');
+  const toast = document.getElementById('toast');
+  const tabClipboard = document.getElementById('tabClipboard');
+  const tabTasksheet = document.getElementById('tabTasksheet');
+
+  function loadItems(tab) {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS[tab]) || '[]');
+    } catch {
+      return [];
+    }
+  }
+  function saveItems(tab, items) {
+    localStorage.setItem(STORAGE_KEYS[tab], JSON.stringify(items));
+  }
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1400);
+  }
+
+  function getCaptureText() {
+    const el = scratch;
+    const selected = el.value.substring(el.selectionStart, el.selectionEnd);
+    return selected.trim().length > 0 ? selected.trim() : el.value.trim();
+  }
+
+  function addItem(tab, text) {
+    if (!text) {
+      showToast('Nothing to capture');
+      return;
+    }
+    const items = loadItems(tab);
+    items.unshift({
+      id: crypto.randomUUID(),
+      text,
+      createdAt: Date.now(),
+      done: false,
+    });
+    saveItems(tab, items);
+    showToast(`Added to ${tab === 'clipboard' ? 'Clipboard' : 'Tasksheet'}`);
+    render();
+  }
+
+  function removeItem(tab, id) {
+    const items = loadItems(tab).filter(i => i.id !== id);
+    saveItems(tab, items);
+    render();
+  }
+
+  function moveItem(fromTab, id) {
+    const toTab = fromTab === 'clipboard' ? 'tasksheet' : 'clipboard';
+    const items = loadItems(fromTab);
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    saveItems(fromTab, items.filter(i => i.id !== id));
+    const destItems = loadItems(toTab);
+    destItems.unshift({ ...item, id: crypto.randomUUID() });
+    saveItems(toTab, destItems);
+    showToast(`Moved to ${toTab === 'clipboard' ? 'Clipboard' : 'Tasksheet'}`);
+    render();
+  }
+
+  function toggleDone(tab, id) {
+    const items = loadItems(tab);
+    const item = items.find(i => i.id === id);
+    if (item) item.done = !item.done;
+    saveItems(tab, items);
+    render();
+  }
+
+  async function copyItem(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Copied');
+    } catch {
+      showToast('Copy failed');
+    }
+  }
+
+  function timeAgo(ts) {
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+
+  function render() {
+    const items = loadItems(activeTab);
+    listEl.innerHTML = '';
+
+    if (items.length === 0) {
+      emptyState.style.display = 'block';
+      emptyState.textContent = activeTab === 'clipboard'
+        ? 'Nothing clipped yet.'
+        : 'No tasks yet.';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = `item ${activeTab}` + (item.done ? ' done' : '');
+
+      let checkHtml = '';
+      if (activeTab === 'tasksheet') {
+        checkHtml = `<div class="item-check ${item.done ? 'checked' : ''}" data-action="toggle" data-id="${item.id}">${item.done ? '✓' : ''}</div>`;
+      }
+
+      const copyBtn = activeTab === 'clipboard'
+        ? `<button class="icon-btn" data-action="copy" data-id="${item.id}" title="Copy">⧉</button>`
+        : '';
+
+      div.innerHTML = `
+        ${checkHtml}
+        <div class="item-text">${escapeHtml(item.text)}</div>
+        <div class="item-actions">
+          ${copyBtn}
+          <button class="icon-btn" data-action="move" data-id="${item.id}" title="Move to ${activeTab === 'clipboard' ? 'Tasksheet' : 'Clipboard'}">⇄</button>
+          <button class="icon-btn" data-action="delete" data-id="${item.id}" title="Delete">✕</button>
+        </div>
+      `;
+      listEl.appendChild(div);
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  listEl.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+    const action = target.dataset.action;
+    const id = target.dataset.id;
+    const items = loadItems(activeTab);
+    const item = items.find(i => i.id === id);
+
+    if (action === 'delete') removeItem(activeTab, id);
+    else if (action === 'move') moveItem(activeTab, id);
+    else if (action === 'toggle') toggleDone(activeTab, id);
+    else if (action === 'copy' && item) copyItem(item.text);
+  });
+
+  function setActiveTab(tab) {
+    activeTab = tab;
+    tabClipboard.classList.toggle('active', tab === 'clipboard');
+    tabTasksheet.classList.toggle('active', tab === 'tasksheet');
+    render();
+  }
+
+  tabClipboard.addEventListener('click', () => setActiveTab('clipboard'));
+  tabTasksheet.addEventListener('click', () => setActiveTab('tasksheet'));
+
+  document.getElementById('addToClipboard').addEventListener('click', () => {
+    addItem('clipboard', getCaptureText());
+    scratch.value = '';
+  });
+  document.getElementById('addToTasksheet').addEventListener('click', () => {
+    addItem('tasksheet', getCaptureText());
+    scratch.value = '';
+  });
+
+  render();
+</script>
+
+</body>
+</html>
